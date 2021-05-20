@@ -10,6 +10,7 @@ import json
 import time
 import pdb
 
+#from magnum import magnum 
 from magnum import magnum 
 #from pymagnum package. 
 # This import statement implies example file is being run
@@ -94,24 +95,35 @@ while True:
     if args.dummy_data:
         devices = dummy_data()
     else:
+        reader = magnum.Magnum(device=args.device)
         devices = reader.getDevices()
     #print(json.dumps(devices, indent=2))
     _t = time.time()
     for d in devices:
-        _tags = {}
+        _tags = {'model_text': 'NYI'}
         for tag in args.tags.split(','):
             if('%' in tag):
                 key = tag
                 #key = key.format('%*%',s)
                 key = key.replace('%','')
-                _tags[key] = d['data'][key]
+                try:
+                    _tags[key] = d['data'][key]
+                except:
+                    a = 5
         _fields = {}
+        i = 0
         for p in d['data']:
             val = d['data'][p]
-            if(type(val) in [float,int]):
+            if(str(val) == 'nan'):
+                pass
+            elif(type(val) in [float,int]):
+                i+=1
                 key = (args.prefix + d['device']+'_' + p).lower()
                 _fields[key] = val
-            
+                if 0 == (i % 10):
+                    print(line_protocol(args.table,_tags,_fields,_t))
+                    _fields = {}
+
         print(line_protocol(args.table,_tags,_fields,_t))
     duration = _t - start
     delay = args.interval - duration
